@@ -1,135 +1,132 @@
 #
 # emojidex-editor.rb
 #
-require './mainwnd.rb'     # class MainWindow
-require './emojiman.rb'    # constant EMOJIS
+require 'emojidex-toolkit'
+require './MainWindow.rb'
+require './ButtonPage.rb'
+require './EmojiManager.rb'
+
+module Events
+  def self.on_mainwindow_create(window)
+    # make tab-notebooks
+    page = EmojiButtonsPage.new('ALL', EMOJI_MANAGER.all_emojis)
+    label = Gtk::Label.new('ALL')
+    window.builder['tab_notebook'].append_page page, label
+
+    EMOJI_MANAGER.categories.each do |category, emojis|
+      page = EmojiButtonsPage.new(category, emojis)
+      label = Gtk::Label.new(category)
+      window.builder['tab_notebook'].append_page page, label
+    end
+  end
+end
 
 # Create a main window, and publish for following codes
 MAIN_WINDOW = MainWindow.new
 
-#
-# All events
-#
 module Events
-	# Emojify button clicked
-	EMOJIFY_RE = /^([^:]*)\:([^:]+)\:(.*)$/o    # RegExp to emojify
-	def self.on_emojify_clicked
-		# parse emoji-tags, and append to buffer (inner-procedure)
-		parse_and_append = lambda {|src_str, txtbuf|
-			s = src_str
-			while EMOJIFY_RE =~ s
-				txtbuf.insert txtbuf.end_iter, $1
-				name, s = $2, $3
-				emoji = EMOJIS.find{|emoji| emoji['name'] == name }
-				txtbuf.insert txtbuf.end_iter, emoji['picture']
-			end
+  # 'Show as Picture' button
+  def self.on_picture_toggled(active)
+    if active
+      then unicodes_to_pictures
+      else pictures_to_unicodes
+    end
+  end
 
-			# emoji-tag is use-upped, so append rest
-			txtbuf.insert txtbuf.end_iter, s
-		}
+  def self.emojify_to_new_buffer
+    result = Gtk::TextBuffer.new  # 返すバッファ
+    work = ''                     # 文字列のワーク
 
-		# temp-buffer, and result-buffer
-		tmp, buf = '', Gtk::TextBuffer.new
+    # ワークをEmojifyして追記する内部関数
+    emojify_work = lambda {
+      EMOJI_MANAGER.emojify_each work do |item|
+        result.insert result.end_iter, (if item.is_a? Emojidex::Emoji
+          then EMOJI_MANAGER.get_picture(item.name)
+          else item.to_s
+        end)
+      end
+    }
 
-		# read by each chars
-		it = MAIN_WINDOW.builder['text'].buffer.start_iter
-		begin
-			if it.pixbuf    # it's a picture
-				# parse temp-buffer and append to result-buffer
-				parse_and_append.call tmp, buf
+    # read by each chars
+    it = MAIN_WINDOW.builder['text'].buffer.start_iter or return
+    begin
+      if it.pixbuf
+        emojify_work.call                  # それまでのワークをEmojify
+        work.clear
+        result.insert result.end_iter, it.pixbuf
+      else
+        work << it.char                    # ワークへ追記するだけ
+      end
+    end while it.forward_char
 
-				# then, append a picture as is, and clear temp-buffer
-				buf.insert buf.end_iter, it.pixbuf
-				tmp = ''
-			else
-				# it's a char
-				tmp += it.char    # append the char to temp-buffer
-			end
-		end while it.forward_char
+    emojify_work.call unless work.empty?   # ワークの残りをEmojify
+    return result
+  end
 
-		# parse rest temp-buffer and append to result-buffer
-		parse_and_append.call tmp, buf
+  def self.unicodes_to_pictures
+    buf = emojify_to_new_buffer
+    MAIN_WINDOW.builder['text'].buffer = buf if buf
+  end
 
-		# set result-buffer to text
-		MAIN_WINDOW.builder['text'].buffer = buf
-	end
+  def self.pictures_to_unicodes
+    unicodes_to_pictures          # 一旦、すべて画像へ変換
+    result = Gtk::TextBuffer.new  # 戻り値となるバッファ
 
-	# deEmojify button clicked
-	def self.on_de_emojify_clicked
-		# result buffer
-		buf = Gtk::TextBuffer.new
+    # 元バッファを１文字ずつ読む
+    it = emojify_to_new_buffer.start_iter or return
+    begin
+      result.insert result.end_iter, (if it.pixbuf
+        then EMOJI_MANAGER.pic2emoji(it.pixbuf).to_s
+        else it.char
+      end)
+    end while it.forward_char
 
-		# read by each chars
-		it = MAIN_WINDOW.builder['text'].buffer.start_iter
-		begin
-			if it.pixbuf    # it's a picture
-				# translate to emoji-tag, and append
-				emoji = EMOJIS.find{|emoji|
-					emoji['picture'] == it.pixbuf
-				}
-				buf.insert buf.end_iter, ":#{emoji['name']}:"
-			else            # it's a char
-				# append it as is
-				buf.insert buf.end_iter, it.char
-			end
-		end while it.forward_char
+    MAIN_WINDOW.builder['text'].buffer = result
+  end
 
-		# replace buffer of text
-		MAIN_WINDOW.builder['text'].buffer = buf
-	end
+  # clip button clicked
+  def self.on_clip_clicked
+    clip_text = ''
 
-	# clip button clicked
-	def self.on_clip_clicked
-		clpbrd = Gtk::Clipboard.get(Gdk::Selection::CLIPBOARD)
+    # read by each chars
+    it = emojify_to_new_buffer.start_iter or return
+    begin
+      if it.pixbuf
+        # translate to emoji-tag
+        emoji = EMOJI_MANAGER.pic2emoji(it.pixbuf)
+        next unless emoji
+        clip_text << (if MAIN_WINDOW.builder['chk_astags'].active?
+          then ":#{emoji.name}"
+          else emoji.to_s
+        end)
+      else
+        clip_text << it.char
+      end
+    end while it.forward_char
 
-		# get string from text, and set to clipboard
-		clpbrd.text = MAIN_WINDOW.builder['text'].buffer.text
+    Gtk::Clipboard.get(Gdk::Selection::CLIPBOARD).text = clip_text
+  end
 
-		# memo: Pixbuf to clip-board
-		# clpbrd.image = obj if obj.class == Gdk::Pixbuf
-	end
+  # each emoji-buttons clicked
+  def self.on_emoji_clicked(emoji_btn)
+    # insert to buffer
+    buf = MAIN_WINDOW.builder['text'].buffer
+    buf.insert buf.get_iter_at(mark: buf.selection_bound), (
+      if MAIN_WINDOW.builder['tgl_picture'].active?
+        # 「画像で表示」オンなので画像を挿入
+        EMOJI_MANAGER.get_picture(emoji_btn.emoji.name)
+      else
+        # 「画像で表示」オフなのでUnicodeかタグを挿入
+        emoji_btn.emoji.to_s
+      end
+    )
 
-	# each emoji-buttons clicked
-	def self.on_emoji_clicked(emoji_btn)
-		# set object to text (inner procedure)
-		set_text = lambda {|obj|
-			if MAIN_WINDOW.builder['chk_append'].active?    # append mode
-				# insert obj to cursor-position on the buffer of text
-				buf = MAIN_WINDOW.builder['text'].buffer
-				buf.insert buf.get_iter_at(:mark=>buf.selection_bound), obj
-			else    # not append mode
-				# set to new empty buffer
-				buf = Gtk::TextBuffer.new
-				buf.insert buf.end_iter, obj
-				MAIN_WINDOW.builder['text'].buffer = buf
-			end
-		}
-
-		# switch by radio button
-		if MAIN_WINDOW.builder['radio_tag'].active?           # emoji-tag
-			set_text.call ":#{emoji_btn.name}:"
-		elsif MAIN_WINDOW.builder['radio_unicode'].active?    # unicode
-			set_text.call emoji_btn.moji
-		elsif MAIN_WINDOW.builder['radio_picture'].active?    # picture
-			set_text.call emoji_btn.image.pixbuf
-		end
-
-		# return focus to text
-		MAIN_WINDOW.builder['text'].focus = true
-	end
-
-	# standard emoji only check-toggled
-	def self.on_stdonly_toggled(chk_stdonly)
-		# change validities of each emoji-buttons
-		MAIN_WINDOW.builder['tab_notebook'].children.each do |page|
-			page.child.child.children.each do |emoji_btn|
-				emoji_btn.validity = (
-					emoji_btn.standard? || !chk_stdonly.active?)
-			end
-		end
-	end
+    # return focus to text
+    MAIN_WINDOW.builder['text'].focus = true
+  end
 end
 
 # start application
 MAIN_WINDOW.show
+EmojiButton.start_loadimage
 Gtk::main
