@@ -1,6 +1,9 @@
+#!/usr/bin/env ruby
 #
-# emojidex-editor.rb
-#
+# emojidex desktop
+# Copyright 2013 Genshin Souzou Kabushiki Kaisha
+# Licensed under the GPL v3
+
 require 'emojidex-toolkit'
 require './MainWindow.rb'
 require './ButtonPage.rb'
