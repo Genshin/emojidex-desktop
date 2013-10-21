@@ -5,7 +5,9 @@ require 'gtk3'
 require 'emojidex-toolkit'
 
 class << EMOJI_MANAGER = Object.new
-  PICTURE_DIRECTORY = './png/'  # .png file root
+  CACHE_DIRECTORY = ENV['HOME'] + '/.emojidex/cache/'  # cache root
+  puts "Cache dir: " + CACHE_DIRECTORY
+
   attr_reader :categories       # { String => [Emojidex::Emoji] }
 
   def initialize
@@ -21,7 +23,7 @@ class << EMOJI_MANAGER = Object.new
   def get_picture(emoji_name)
     unless @picts[emoji_name]
       @mutex.synchronize do
-        @converter.convert_from_name! @utf, PICTURE_DIRECTORY,
+        @converter.convert_from_name! @utf, CACHE_DIRECTORY,
           emoji_name, { :size => :mdpi }
         emoji = @utf.where_name(emoji_name)
         pict = Gdk::Pixbuf.new(emoji.image_paths[0])

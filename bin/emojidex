@@ -5,9 +5,9 @@
 # Licensed under the GPL v3
 
 require 'emojidex-toolkit'
-require './MainWindow.rb'
-require './ButtonPage.rb'
-require './EmojiManager.rb'
+require_relative '../lib/emojidex-desktop/main_window.rb'
+require_relative '../lib/emojidex-desktop/button_page.rb'
+require_relative '../lib/emojidex-desktop/emoji_manager.rb'
 
 module Events
   def self.on_mainwindow_create(window)

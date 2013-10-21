@@ -2,7 +2,7 @@
 # emojibutton.rb
 #
 require 'gtk3'
-require './EmojiManager.rb'
+require_relative 'emoji_manager.rb'
 
 #
 # each Emoji buttons

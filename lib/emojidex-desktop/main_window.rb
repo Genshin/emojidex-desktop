@@ -11,7 +11,7 @@ class MainWindow
   def initialize
     # load .glade file
     @builder = Gtk::Builder.new
-    @builder.add_from_file 'main_window.glade'
+    @builder.add_from_file File.expand_path('../main_window.glade', __FILE__)
 
     # quit events
     @builder['main_window'].signal_connect 'delete_event' do
