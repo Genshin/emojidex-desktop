@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'emojidex-desktop'
-  s.version     = '0.0.1'
+  s.version     = '0.0.2'
   s.license     = "GNU GPL v3"
   s.summary     = "Desktop client and tools for emojidex"
   s.description = ""
@@ -8,6 +8,8 @@ Gem::Specification.new do |s|
   s.email       = 'zero@genshin.org'
   s.files        = `git ls-files`.split("\n")
   s.homepage    = 'http://emojidex.com/dev'
+
+  s.executables << 'emojidex'
 
   s.add_dependency 'emojidex-toolkit'
 end

@@ -1,6 +1,6 @@
 # buttonpage.rb
 require 'gtk3'
-require './EmojiButton.rb'    # class EmojiButton
+require_relative 'emoji_button.rb'    # class EmojiButton
 
 #
 # Notebook's tab page for "EmojiButton"s.
