@@ -4,7 +4,7 @@
   <object class="GtkWindow" id="main_window">
     <property name="can_focus">False</property>
     <property name="border_width">10</property>
-    <property name="title">Phantom Open Emoji Editor</property>
+    <property name="title">emojidex</property>
     <property name="resizable">False</property>
     <child>
       <object class="GtkBox" id="box1">

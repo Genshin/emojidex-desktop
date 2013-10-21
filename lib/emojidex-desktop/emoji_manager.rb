@@ -6,7 +6,6 @@ require 'emojidex-toolkit'
 
 class << EMOJI_MANAGER = Object.new
   CACHE_DIRECTORY = ENV['HOME'] + '/.emojidex/cache/'  # cache root
-  puts "Cache dir: " + CACHE_DIRECTORY
 
   attr_reader :categories       # { String => [Emojidex::Emoji] }
 
