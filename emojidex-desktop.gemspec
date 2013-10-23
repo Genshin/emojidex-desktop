@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'emojidex-desktop'
-  s.version     = '0.0.2'
+  s.version     = '0.0.3'
   s.license     = "GNU GPL v3"
   s.summary     = "Desktop client and tools for emojidex"
   s.description = ""
