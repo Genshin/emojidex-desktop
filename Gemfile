@@ -1,7 +1,5 @@
 source 'http://rubygems.org'
 
-gem 'ruby-filemagic'
-
 group :development do
   gem 'libnotify'
   gem 'guard'
@@ -12,4 +10,4 @@ end
 
 gem 'gtk3'
 
-gem 'emojidex-toolkit'
+gem 'emojidex-toolkit', path: '../emojidex-toolkit'
