@@ -4,7 +4,7 @@
 require 'gtk3'
 require 'emojidex-toolkit'
 
-class << EMOJI_MANAGER = Object.new
+class EmojiManager
   CACHE_DIRECTORY = ENV['HOME'] + '/.emojidex/cache/'  # cache root
 
   attr_reader :categories       # { String => [Emojidex::Emoji] }
@@ -46,4 +46,5 @@ class << EMOJI_MANAGER = Object.new
     return @reverse_lookup[pict]
   end
 end
-EMOJI_MANAGER.instance_eval{ initialize }
+
+EMOJI_MANAGER = EmojiManager.new
