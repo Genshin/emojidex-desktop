@@ -9,5 +9,4 @@ group :development do
 end
 
 gem 'gtk3'
-
-gem 'emojidex-toolkit', path: '../emojidex-toolkit'
+gem 'emojidex-toolkit'
