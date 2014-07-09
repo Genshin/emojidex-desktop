@@ -4,7 +4,7 @@
 # Copyright 2013 Genshin Souzou Kabushiki Kaisha
 # Licensed under the GPL v3
 
-require 'emojidex-toolkit'
+require 'emojidex'
 require_relative '../lib/emojidex-desktop/main_window.rb'
 require_relative '../lib/emojidex-desktop/button_page.rb'
 require_relative '../lib/emojidex-desktop/emoji_manager.rb'
@@ -16,11 +16,12 @@ module Events
     label = Gtk::Label.new('ALL')
     window.builder['tab_notebook'].append_page page, label
 
-    EMOJI_MANAGER.categories.each do |category, emojis|
-      page = EmojiButtonsPage.new(category, emojis)
-      label = Gtk::Label.new(category)
-      window.builder['tab_notebook'].append_page page, label
-    end
+    # TODO
+    # EMOJI_MANAGER.categories.each do |category, emojis|
+    #   page = EmojiButtonsPage.new(category, emojis)
+    #   label = Gtk::Label.new(category)
+    #   window.builder['tab_notebook'].append_page page, label
+    # end
   end
 end
 

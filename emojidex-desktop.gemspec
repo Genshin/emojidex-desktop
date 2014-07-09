@@ -11,6 +11,6 @@ Gem::Specification.new do |s|
 
   s.executables << 'emojidex'
 
-  s.add_dependency 'emojidex-toolkit'
+  # s.add_dependency 'emojidex'
   s.add_dependency 'gtk3'
 end

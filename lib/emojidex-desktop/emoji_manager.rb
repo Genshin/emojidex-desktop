@@ -2,7 +2,7 @@
 # emojiman.rb
 #
 require 'gtk3'
-require 'emojidex-toolkit'
+require 'emojidex'
 
 class EmojiManager
   CACHE_DIRECTORY = ENV['HOME'] + '/.emojidex/cache/'  # cache root
@@ -10,9 +10,15 @@ class EmojiManager
   attr_reader :categories       # { String => [Emojidex::Emoji] }
 
   def initialize
-    @converter = Emojidex::Converter.new
-    @utf = Emojidex::UTF.new
-    @categories = @utf.categories
+    # TODO
+    # @converter = Emojidex::Converter.new
+    # @utf = Emojidex::UTF.new
+    # @categories = @utf.categories
+    @utf = []
+    @utf << Emojidex::Emoji.new({moji: '🌠', code: 'shooting_star',
+                                 code_ja: '流れ星', category: 'cosmos',
+                                 unicode: '1f320', uri: '/dummy/uri'})
+    @categories = ['cosmos']
     @picts = {}                   # { String => Gdk::Pixbuf }
     @reverse_lookup = {}
     @mutex = Mutex.new

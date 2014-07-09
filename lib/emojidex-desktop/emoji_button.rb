@@ -32,8 +32,9 @@ class EmojiButton < Gtk::Button
   def initialize(emoji)     # Emojidex::Emoji
     super()
 
+    # TODO emoji.name -> emoji.code
     @emoji = emoji
-    self.name = emoji.name
+    self.name = emoji.code
     @image = Gtk::Image.new
     add @image
 
