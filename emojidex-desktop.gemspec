@@ -11,7 +11,8 @@ Gem::Specification.new do |s|
 
   s.executables << 'emojidex'
 
-  # s.add_dependency 'emojidex'
-  s.add_dependency 'gtk3'
+  s.add_dependency 'emojidex'
   s.add_dependency 'emojidex-vectors'
+  s.add_dependency 'gtk3'
+  s.add_dependency 'rsvg2'
 end

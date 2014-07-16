@@ -12,7 +12,7 @@ class EmojiManager
   attr_reader :categories       # { String => [Emojidex::Emoji] }
 
   def initialize
-    load_emoji(check_cache)
+    load_emoji
 
     # TODO
     # @converter = Emojidex::Converter.new
@@ -55,18 +55,13 @@ class EmojiManager
     return @reverse_lookup[pict]
   end
 
-  def check_cache
-    source_path = if File.exist?(CACHE_DIRECTORY)
-                    CACHE_DIRECTORY
-                  else
-                    "#{Gem.loaded_specs['emojidex-vectors'].full_gem_path}/emoji/utf"
-                  end
-  end
-
-  def load_emoji(source_path)
+  def load_emoji
     @collection = Emojidex::Collection.new
-    @collection.load_local_collection(source_path)
-    @collection.cache! unless File.exist?(CACHE_DIRECTORY)
+
+    if File.exist?("#{CACHE_DIRECTORY}emoji.json")
+      then @collection.load_local_collection(CACHE_DIRECTORY)
+      else create_cache
+    end
 
     @utf = @collection.emoji.values
 
@@ -74,6 +69,14 @@ class EmojiManager
     @collection.categories.each do |category|
       @categories << [category.to_s, @collection.category(category).emoji.values]
     end
+  end
+
+  def create_cache
+    gem_path = Gem.loaded_specs['emojidex-vectors'].full_gem_path
+    @collection.load_local_collection("#{gem_path}/emoji/utf")
+    @collection.cache!
+    @collection.load_local_collection("#{gem_path}/emoji/extended")
+    @collection.cache!
   end
 end
 
