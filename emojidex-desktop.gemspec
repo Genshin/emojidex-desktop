@@ -13,4 +13,5 @@ Gem::Specification.new do |s|
 
   # s.add_dependency 'emojidex'
   s.add_dependency 'gtk3'
+  s.add_dependency 'emojidex-vectors'
 end

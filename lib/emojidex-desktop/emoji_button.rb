@@ -13,7 +13,7 @@ class EmojiButton < Gtk::Button
   def self.start_loadimage
     Thread.new do
       while btn = @@unloaded_images.shift
-        btn.add_image EMOJI_MANAGER.get_picture(btn.emoji.name)
+        btn.add_image EMOJI_MANAGER.get_picture(btn.emoji.code)
       end
     end
   end
@@ -32,7 +32,6 @@ class EmojiButton < Gtk::Button
   def initialize(emoji)     # Emojidex::Emoji
     super()
 
-    # TODO emoji.name -> emoji.code
     @emoji = emoji
     self.name = emoji.code
     @image = Gtk::Image.new
