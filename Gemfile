@@ -10,5 +10,4 @@ group :development do
   gem 'guard-rubocop'
 
   gem 'emojidex', github: 'emojidex/emojidex'
-  gem 'emojidex-vectors', github: 'emojidex/emojidex-vectors'
 end

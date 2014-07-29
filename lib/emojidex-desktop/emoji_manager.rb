@@ -3,8 +3,7 @@
 #
 require 'gtk3'
 require 'emojidex'
-require 'emojidex-vectors'
-require 'rsvg2'
+require 'emojidex-rasters'
 
 class EmojiManager
   CACHE_DIRECTORY = ENV['HOME'] + '/.emojidex/cache/'  # cache root
@@ -13,11 +12,6 @@ class EmojiManager
 
   def initialize
     load_emoji
-
-    # TODO
-    # @converter = Emojidex::Converter.new
-    # @utf = Emojidex::UTF.new
-    # @categories = @utf.categories
 
     @picts = {}                   # { String => Gdk::Pixbuf }
     @reverse_lookup = {}
@@ -28,14 +22,8 @@ class EmojiManager
   def get_picture(emoji_name)
     unless @picts[emoji_name]
       @mutex.synchronize do
-        # TODO
-        # @converter.convert_from_name! @utf, CACHE_DIRECTORY,
-        #   emoji_name, { :size => :mdpi }
-        # emoji = @utf.where_name(emoji_name)
-        # pict = Gdk::Pixbuf.new(emoji.image_paths[0])
-        pict = RSVG.pixbuf_from_file_at_size("#{CACHE_DIRECTORY}#{emoji_name}.svg", 16, 16)
+        pict = Gdk::Pixbuf.new("#{CACHE_DIRECTORY}/px16/#{emoji_name}.png")
         @picts[emoji_name] = pict
-        # @reverse_lookup[pict] = emoji
         @reverse_lookup[pict] = @collection.find_by_code(emoji_name)
       end
     end
@@ -44,7 +32,14 @@ class EmojiManager
 
   def emojify_each(str)
     return to_enum(:emojify_each) unless block_given?
-    @utf.emojify_each(str) {|item| yield item }
+    emojify_each(str) {|item| yield item }
+    # @utf.emojify_each(str) {|item| yield item }
+  end
+
+  def emojify_each(str)
+    str.chars do |char|
+      yield @collection.find_by_moji(char)
+    end
   end
 
   def all_emojis
@@ -58,7 +53,7 @@ class EmojiManager
   def load_emoji
     @collection = Emojidex::Collection.new
 
-    if File.exist?("#{CACHE_DIRECTORY}emoji.json")
+    if File.exist?("#{CACHE_DIRECTORY}/emoji.json")
       then @collection.load_local_collection(CACHE_DIRECTORY)
       else create_cache
     end
@@ -72,11 +67,20 @@ class EmojiManager
   end
 
   def create_cache
-    gem_path = Gem.loaded_specs['emojidex-vectors'].full_gem_path
+    gem_path = Gem.loaded_specs['emojidex-rasters'].full_gem_path
     @collection.load_local_collection("#{gem_path}/emoji/utf")
-    @collection.cache!
+    @collection.cache!({sizes: get_sizes})
     @collection.load_local_collection("#{gem_path}/emoji/extended")
-    @collection.cache!
+    @collection.cache!({sizes: get_sizes})
+  end
+
+  def get_sizes
+    sizes = []
+    keys = Emojidex::Defaults.sizes.keys
+    keys.each do |key|
+      sizes << key.to_s
+    end
+    sizes
   end
 end
 

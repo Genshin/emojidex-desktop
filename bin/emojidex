@@ -44,7 +44,7 @@ module Events
     emojify_work = lambda {
       EMOJI_MANAGER.emojify_each work do |item|
         result.insert result.end_iter, (if item.is_a? Emojidex::Emoji
-          then EMOJI_MANAGER.get_picture(item.name)
+          then EMOJI_MANAGER.get_picture(item.code)
           else item.to_s
         end)
       end
@@ -67,19 +67,11 @@ module Events
   end
 
   def self.unicodes_to_pictures
-    # TODO
-    # emojify does not exist.
-    return
-
     buf = emojify_to_new_buffer
     MAIN_WINDOW.builder['text'].buffer = buf if buf
   end
 
   def self.pictures_to_unicodes
-    # TODO
-    # emojify does not exist.
-    return
-
     unicodes_to_pictures          # 一旦、すべて画像へ変換
     result = Gtk::TextBuffer.new  # 戻り値となるバッファ
 
@@ -88,6 +80,7 @@ module Events
     begin
       result.insert result.end_iter, (if it.pixbuf
         then EMOJI_MANAGER.pic2emoji(it.pixbuf).to_s
+        # then ":#{EMOJI_MANAGER.pic2emoji(it.pixbuf).code}:"
         else it.char
       end)
     end while it.forward_char
@@ -132,8 +125,8 @@ module Events
         EMOJI_MANAGER.get_picture(emoji_btn.emoji.code)
       else
         # 「画像で表示」オフなのでUnicodeかタグを挿入
-        # emoji_btn.emoji.to_s
-        ":#{emoji_btn.name}:"
+        emoji_btn.emoji.to_s
+        # ":#{emoji_btn.name}:"
       end
     )
 
