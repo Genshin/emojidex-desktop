@@ -7,6 +7,7 @@ require 'emojidex-rasters'
 
 class EmojiManager
   CACHE_DIRECTORY = ENV['HOME'] + '/.emojidex/cache/'  # cache root
+  SEPARATOR = ':'
 
   attr_reader :categories       # { String => [Emojidex::Emoji] }
 
@@ -32,14 +33,67 @@ class EmojiManager
 
   def emojify_each(str)
     return to_enum(:emojify_each) unless block_given?
-    emojify_each(str) {|item| yield item }
-    # @utf.emojify_each(str) {|item| yield item }
+
+    work = ''
+
+    str.chars do |char|
+      if @collection.find_by_moji(char).nil?
+        work << char
+      else
+        emojify(work) { |item| yield item }
+        yield @collection.find_by_moji(char)
+        work = ''
+      end
+    end
+
+    emojify(work) { |item| yield item }
   end
 
-  def emojify_each(str)
-    str.chars do |char|
-      yield @collection.find_by_moji(char)
+  def emojify(str)
+    work = ''
+
+    # Too short
+    if str.length < 3
+      yield str
+      return
     end
+
+    # Search for the start-separator
+    start_index = str.index(SEPARATOR)
+    if start_index.nil?
+      yield str
+      return
+    end
+
+    # Before the first separator.
+    yield str[0..start_index - 1] unless start_index == 0
+    work << str[start_index..str.length - 1]
+
+    # Until separator is not exist.
+    while start_index != nil do
+      # Search for the end-separator
+      end_index = work[1..work.length - 1].index(SEPARATOR)
+      break if end_index.nil?
+
+      # String between the separator.
+      code = work[0..end_index + 1]
+      emoji = @collection.find_by_code(code[1..code.length - 2])
+
+      # Whether this string is emoji code.
+      if emoji.nil?
+        yield work[0..end_index]
+        work = work[end_index + 1..work.length - 1]
+      else
+        yield emoji
+        work = work[end_index + 2..work.length - 1]
+      end
+
+      # Move to next start-separator.
+      start_index = work.index(SEPARATOR)
+    end
+
+    # Insert the remaining characters.
+    yield work
   end
 
   def all_emojis

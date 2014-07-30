@@ -85,15 +85,13 @@ module Events
       end)
     end while it.forward_char
 
+    # FIXME: The last character disappears
+
     MAIN_WINDOW.builder['text'].buffer = result
   end
 
   # clip button clicked
   def self.on_clip_clicked
-    # TODO
-    # emojify does not exist.
-    return
-
     clip_text = ''
 
     # read by each chars
@@ -104,7 +102,7 @@ module Events
         emoji = EMOJI_MANAGER.pic2emoji(it.pixbuf)
         next unless emoji
         clip_text << (if MAIN_WINDOW.builder['chk_astags'].active?
-          then ":#{emoji.name}"
+          then ":#{emoji.code}:"
           else emoji.to_s
         end)
       else
