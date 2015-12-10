@@ -6,134 +6,121 @@
 
 require 'emojidex'
 require_relative '../lib/emojidex-desktop/main_window.rb'
-require_relative '../lib/emojidex-desktop/button_page.rb'
-require_relative '../lib/emojidex-desktop/emoji_manager.rb'
+#require_relative '../lib/emojidex-desktop/button_page.rb'
+#require_relative '../lib/emojidex-desktop/emoji_manager.rb'
 
-module Events
-  def self.on_mainwindow_create(window)
-    # make tab-notebooks
-    page = EmojiButtonsPage.new('ALL', EMOJI_MANAGER.all_emojis)
-    label = Gtk::Label.new('ALL')
-    window.builder['tab_notebook'].append_page page, label
-
-    EMOJI_MANAGER.categories.each do |category, emojis|
-      page = EmojiButtonsPage.new(category, emojis)
-      label = Gtk::Label.new(category)
-      window.builder['tab_notebook'].append_page page, label
-    end
-  end
-end
-
-# Create a main window, and publish for following codes
-MAIN_WINDOW = MainWindow.new
-
-module Events
-  # 'Show as Picture' button
-  def self.on_picture_toggled(active)
-    if active
-      then unicodes_to_pictures
-      else pictures_to_unicodes
-    end
-  end
-
-  def self.emojify_to_new_buffer
-    result = Gtk::TextBuffer.new  # 返すバッファ
-    work = ''                     # 文字列のワーク
-
-    # ワークをEmojifyして追記する内部関数
-    emojify_work = lambda {
-      EMOJI_MANAGER.emojify_each work do |item|
-        result.insert result.end_iter, (if item.is_a? Emojidex::Emoji
-          then EMOJI_MANAGER.get_picture(item.code)
-          else item.to_s
-        end)
-      end
-    }
-
-    # read by each chars
-    it = MAIN_WINDOW.builder['text'].buffer.start_iter or return
-    begin
-      if it.pixbuf
-        emojify_work.call                  # それまでのワークをEmojify
-        work.clear
-        result.insert result.end_iter, it.pixbuf
-      else
-        work << it.char                    # ワークへ追記するだけ
-      end
-    end while it.forward_char
-
-    emojify_work.call unless work.empty?   # ワークの残りをEmojify
-    return result
-  end
-
-  def self.unicodes_to_pictures
-    buf = emojify_to_new_buffer
-    MAIN_WINDOW.builder['text'].buffer = buf if buf
-  end
-
-  def self.pictures_to_unicodes
-    unicodes_to_pictures          # 一旦、すべて画像へ変換
-    result = Gtk::TextBuffer.new  # 戻り値となるバッファ
-
-    # 元バッファを１文字ずつ読む
-    it = emojify_to_new_buffer.start_iter or return
-    begin
-      result.insert result.end_iter, (if it.pixbuf
-        then EMOJI_MANAGER.pic2emoji(it.pixbuf).to_s
-        # then ":#{EMOJI_MANAGER.pic2emoji(it.pixbuf).code}:"
-        else it.char
-      end)
-    end while it.forward_char
-
-    # FIXME: The last character disappears
-
-    MAIN_WINDOW.builder['text'].buffer = result
-  end
-
-  # clip button clicked
-  def self.on_clip_clicked
-    clip_text = ''
-
-    # read by each chars
-    it = emojify_to_new_buffer.start_iter or return
-    begin
-      if it.pixbuf
-        # translate to emoji-tag
-        emoji = EMOJI_MANAGER.pic2emoji(it.pixbuf)
-        next unless emoji
-        clip_text << (if MAIN_WINDOW.builder['chk_astags'].active?
-          then ":#{emoji.code}:"
-          else emoji.to_s
-        end)
-      else
-        clip_text << it.char
-      end
-    end while it.forward_char
-
-    Gtk::Clipboard.get(Gdk::Selection::CLIPBOARD).text = clip_text
-  end
-
-  # each emoji-buttons clicked
-  def self.on_emoji_clicked(emoji_btn)
-    # insert to buffer
-    buf = MAIN_WINDOW.builder['text'].buffer
-    buf.insert buf.get_iter_at(mark: buf.selection_bound), (
-      if MAIN_WINDOW.builder['tgl_picture'].active?
-        # 「画像で表示」オンなので画像を挿入
-        EMOJI_MANAGER.get_picture(emoji_btn.emoji.code)
-      else
-        # 「画像で表示」オフなのでUnicodeかタグを挿入
-        emoji_btn.emoji.to_s
-        # ":#{emoji_btn.name}:"
-      end
-    )
-
-    # return focus to text
-    MAIN_WINDOW.builder['text'].focus = true
-  end
-end
+#
+## Create a main window, and publish for following codes
+#MAIN_WINDOW = MainWindow.new
+#
+#module Events
+#  # 'Show as Picture' button
+#  def self.on_picture_toggled(active)
+#    if active
+#      then unicodes_to_pictures
+#      else pictures_to_unicodes
+#    end
+#  end
+#
+#  def self.emojify_to_new_buffer
+#    result = Gtk::TextBuffer.new  # 返すバッファ
+#    work = ''                     # 文字列のワーク
+#
+#    # ワークをEmojifyして追記する内部関数
+#    emojify_work = lambda {
+#      EMOJI_MANAGER.emojify_each work do |item|
+#        result.insert result.end_iter, (if item.is_a? Emojidex::Emoji
+#          then EMOJI_MANAGER.get_picture(item.code)
+#          else item.to_s
+#        end)
+#      end
+#    }
+#
+#    # read by each chars
+#    it = MAIN_WINDOW.builder['text'].buffer.start_iter or return
+#    begin
+#      if it.pixbuf
+#        emojify_work.call                  # それまでのワークをEmojify
+#        work.clear
+#        result.insert result.end_iter, it.pixbuf
+#      else
+#        work << it.char                    # ワークへ追記するだけ
+#      end
+#    end while it.forward_char
+#
+#    emojify_work.call unless work.empty?   # ワークの残りをEmojify
+#    return result
+#  end
+#
+#  def self.unicodes_to_pictures
+#    buf = emojify_to_new_buffer
+#    MAIN_WINDOW.builder['text'].buffer = buf if buf
+#  end
+#
+#  def self.pictures_to_unicodes
+#    unicodes_to_pictures          # 一旦、すべて画像へ変換
+#    result = Gtk::TextBuffer.new  # 戻り値となるバッファ
+#
+#    # 元バッファを１文字ずつ読む
+#    it = emojify_to_new_buffer.start_iter or return
+#    begin
+#      result.insert result.end_iter, (if it.pixbuf
+#        then EMOJI_MANAGER.pic2emoji(it.pixbuf).to_s
+#        # then ":#{EMOJI_MANAGER.pic2emoji(it.pixbuf).code}:"
+#        else it.char
+#      end)
+#    end while it.forward_char
+#
+#    # FIXME: The last character disappears
+#
+#    MAIN_WINDOW.builder['text'].buffer = result
+#  end
+#
+#  # clip button clicked
+#  def self.on_clip_clicked
+#    clip_text = ''
+#
+#    # read by each chars
+#    it = emojify_to_new_buffer.start_iter or return
+#    begin
+#      if it.pixbuf
+#        # translate to emoji-tag
+#        emoji = EMOJI_MANAGER.pic2emoji(it.pixbuf)
+#        next unless emoji
+#        clip_text << (if MAIN_WINDOW.builder['chk_astags'].active?
+#          then ":#{emoji.code}:"
+#          else emoji.to_s
+#        end)
+#      else
+#        clip_text << it.char
+#      end
+#    end while it.forward_char
+#
+#    Gtk::Clipboard.get(Gdk::Selection::CLIPBOARD).text = clip_text
+#  end
+#
+#  # each emoji-buttons clicked
+#  def self.on_emoji_clicked(emoji_btn)
+#    # insert to buffer
+#    buf = MAIN_WINDOW.builder['text'].buffer
+#    buf.insert buf.get_iter_at(mark: buf.selection_bound), (
+#      if MAIN_WINDOW.builder['tgl_picture'].active?
+#        # 「画像で表示」オンなので画像を挿入
+#        EMOJI_MANAGER.get_picture(emoji_btn.emoji.code)
+#      else
+#        # 「画像で表示」オフなのでUnicodeかタグを挿入
+#        emoji_btn.emoji.to_s
+#        # ":#{emoji_btn.name}:"
+#      end
+#    )
+#
+#    # return focus to text
+#    MAIN_WINDOW.builder['text'].focus = true
+#  end
+#end
 
 # start application
-MAIN_WINDOW.show
-EmojiButton.start_loadimage
+@window = EmojidexDesktop::MainWindow.new
+@window.show
+#EmojiButton.start_loadimage
 Gtk::main
